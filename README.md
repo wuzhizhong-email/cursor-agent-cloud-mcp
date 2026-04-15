@@ -27,7 +27,28 @@ npm start
 
 ---
 
-## 2) Cloud Agents 里应该填什么 URL
+## 2) Docker 部署（推荐）
+
+```bash
+docker build -t tiny-order-mcp .
+docker run --rm -p 3000:3000 tiny-order-mcp
+```
+
+如需改端口或超时：
+
+```bash
+docker run --rm -p 3000:3000 \
+  -e PORT=3000 \
+  -e REQUEST_TIMEOUT_MS=10000 \
+  -e ORDER_DETAIL_API_BASE="https://youxuer8.test.xdf.cn/api/order/rnInterface/test/getOrderDetail" \
+  tiny-order-mcp
+```
+
+部署到你的云主机/容器平台后，确保公网可访问到 `https://your-mcp-host/mcp`。
+
+---
+
+## 3) Cloud Agents 里应该填什么 URL
 
 在 Cloud Agents 里配置 MCP 时，填的是 **你部署出来的 MCP 服务地址**，例如：
 
@@ -37,7 +58,7 @@ npm start
 
 ---
 
-## 3) 工具行为
+## 4) 工具行为
 
 `get_order_detail(order_id)` 接收 `order_id`（字符串）并返回：
 
