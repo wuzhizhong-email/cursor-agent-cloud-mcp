@@ -31,10 +31,31 @@ function createServer() {
         const upstreamUrl = new URL(ORDER_DETAIL_API_BASE);
         upstreamUrl.searchParams.set("orderId", order_id);
 
-        const response = await fetch(upstreamUrl, {
-          method: "GET",
-          signal: controller.signal,
-        });
+        const requestUpstream = async (method) => {
+          if (method === "POST") {
+            return fetch(upstreamUrl, {
+              method,
+              signal: controller.signal,
+              headers: {
+                "content-type": "application/json",
+              },
+              body: JSON.stringify({ orderId: order_id }),
+            });
+          }
+
+          return fetch(upstreamUrl, {
+            method,
+            signal: controller.signal,
+          });
+        };
+
+        let requestMethod = "GET";
+        let response = await requestUpstream(requestMethod);
+
+        if (response.status === 405) {
+          requestMethod = "POST";
+          response = await requestUpstream(requestMethod);
+        }
 
         const contentType = response.headers.get("content-type") ?? "";
         const isJson = contentType.includes("application/json");
@@ -46,7 +67,7 @@ function createServer() {
             content: [
               {
                 type: "text",
-                text: `Upstream API returned ${response.status}: ${typeof body === "string" ? body : JSON.stringify(body)}`,
+                text: `Upstream API returned ${response.status} (${requestMethod}): ${typeof body === "string" ? body : JSON.stringify(body)}`,
               },
             ],
           };
@@ -62,6 +83,7 @@ function createServer() {
           structuredContent: {
             order_id,
             upstream_url: upstreamUrl.toString(),
+            upstream_method: requestMethod,
             data: body,
           },
         };

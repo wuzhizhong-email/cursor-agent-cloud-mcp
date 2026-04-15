@@ -42,6 +42,8 @@ npm start
 `get_order_detail(order_id)` 接收 `order_id`（字符串）并返回：
 
 - `content.text`：上游响应的 JSON 文本（或文本内容）
-- `structuredContent`：包含 `order_id`、请求 URL、以及返回数据
+- `structuredContent`：包含 `order_id`、请求 URL、请求方法、以及返回数据
+
+实现上会优先用 `GET` 请求上游；如果上游返回 `405`，自动回退到 `POST` 再试一次。
 
 当上游请求失败（超时 / 非 2xx / 网络错误）时，工具返回 `isError: true` 和错误信息。
