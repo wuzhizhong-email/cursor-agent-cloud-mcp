@@ -1,0 +1,28 @@
+{
+  "name": "wzztest-mcp",
+  "version": "1.0.0",
+  "description": "wzzTest MCP server (Streamable HTTP) — security code captcha proxy",
+  "type": "module",
+  "main": "wzzTest/server.mjs",
+  "scripts": {
+    "start": "node wzzTest/server.mjs",
+    "tunnel": "bash wzzTest/deploy-tunnel.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wuzhizhong-email/cursor-agent-cloud-mcp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wuzhizhong-email/cursor-agent-cloud-mcp/issues"
+  },
+  "homepage": "https://github.com/wuzhizhong-email/cursor-agent-cloud-mcp#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "express": "^5.2.1",
+    "zod": "^4.3.6"
+  }
+}
