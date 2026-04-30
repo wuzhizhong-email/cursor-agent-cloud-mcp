@@ -1,3 +1,4 @@
-# Generated captcha snapshots from get_security_code_image (do not commit)
+# Generated captcha snapshots from get_security_code_image (do not commit by default)
 *
 !.gitignore
+!security_code_sample.jpg
