@@ -1,6 +1,12 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const REPO_IMAGE_DIR = join(__dirname, '..', 'image');
 
 /**
  * wzzTest MCP — Streamable HTTP on POST /mcp
@@ -124,6 +130,24 @@ function guessMimeFromJson(obj) {
     return null;
 }
 
+function extFromMime(mimeType) {
+    const m = String(mimeType || '').toLowerCase();
+    if (m.includes('png')) return 'png';
+    if (m.includes('gif')) return 'gif';
+    if (m.includes('webp')) return 'webp';
+    if (m.includes('svg')) return 'svg';
+    return 'jpg';
+}
+
+async function saveSecurityCodeImageToRepo(base64, mimeType) {
+    await mkdir(REPO_IMAGE_DIR, { recursive: true });
+    const ext = extFromMime(mimeType);
+    const filename = `security_code_${Date.now()}.${ext}`;
+    const absPath = join(REPO_IMAGE_DIR, filename);
+    await writeFile(absPath, Buffer.from(base64, 'base64'));
+    return { absPath, repoRelative: `image/${filename}` };
+}
+
 function buildServer() {
     const server = new McpServer(
         {
@@ -137,11 +161,12 @@ function buildServer() {
         'get_security_code_image',
         {
             description:
-                'Call the security code API (loginMode=Front) and return the captcha image as base64 (via MCP image content).',
+                'Call the security code API (loginMode=Front), save the image under the repository image/ folder, and return the captcha as MCP image content.',
             inputSchema: {}
         },
         async () => {
             const { base64, mimeType } = await fetchSecurityCodePayload();
+            const { repoRelative } = await saveSecurityCodeImageToRepo(base64, mimeType);
             return {
                 content: [
                     {
@@ -151,7 +176,7 @@ function buildServer() {
                     },
                     {
                         type: 'text',
-                        text: `Captcha image (base64): ${base64}`
+                        text: `Saved to ${repoRelative}. Captcha image (base64): ${base64}`
                     }
                 ]
             };
