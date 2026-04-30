@@ -1,14 +1,15 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
-import * as z from 'zod/v4';
 
 /**
  * wzzTest MCP — Streamable HTTP on POST /mcp
  *
+ * Default: listen on http://0.0.0.0:8080/mcp (Streamable HTTP POST).
+ *
  * Env:
  *   MCP_PORT - listen port (default 8080)
- *   SECURITY_CODE_UPSTREAM_URL - override upstream base URL (loginMode is appended)
+ *   SECURITY_CODE_UPSTREAM_URL - override upstream base URL (loginMode is always Front)
  *   MCP_ALLOWED_HOSTS - comma-separated Host allowlist (DNS rebinding protection)
  */
 const DEFAULT_UPSTREAM =
@@ -63,9 +64,11 @@ function extractBase64FromJson(value, depth = 0) {
     return null;
 }
 
-async function fetchSecurityCodePayload(loginMode) {
+const LOGIN_MODE = 'Front';
+
+async function fetchSecurityCodePayload() {
     const url = new URL(UPSTREAM_URL);
-    url.searchParams.set('loginMode', loginMode);
+    url.searchParams.set('loginMode', LOGIN_MODE);
 
     const ac = new AbortController();
     const timer = setTimeout(() => ac.abort(), 30000);
@@ -134,17 +137,11 @@ function buildServer() {
         'get_security_code_image',
         {
             description:
-                'Call the security code API and return the captcha image as base64 (via MCP image content).',
-            inputSchema: {
-                login_mode: z
-                    .string()
-                    .optional()
-                    .default('Front')
-                    .describe('loginMode query parameter (default: Front)')
-            }
+                'Call the security code API (loginMode=Front) and return the captcha image as base64 (via MCP image content).',
+            inputSchema: {}
         },
-        async ({ login_mode: loginMode }) => {
-            const { base64, mimeType } = await fetchSecurityCodePayload(loginMode ?? 'Front');
+        async () => {
+            const { base64, mimeType } = await fetchSecurityCodePayload();
             return {
                 content: [
                     {
